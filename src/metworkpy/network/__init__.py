@@ -5,8 +5,8 @@ from .centrality import (
 )
 from .cluster import (
     get_distance_matrix,
-    get_network_group_clustering,
-    get_network_group_linkage,
+    get_network_target_set_clustering,
+    get_network_target_set_linkage,
 )
 from .components import find_variable_components
 from .density import (
@@ -26,13 +26,13 @@ from .neighborhoods import (
 from .network_construction import (
     create_adjacency_matrix,
     create_gene_network,
-    create_group_distance_adjacency_matrix,
-    create_group_distance_network,
-    create_group_neighborhood_network,
     create_metabolic_network,
     create_metabolite_network,
     create_mutual_information_network,
     create_reaction_network,
+    create_target_set_distance_adjacency_matrix,
+    create_target_set_distance_network,
+    create_target_set_neighborhood_network,
     get_top_metabolite_pairs,
     get_top_metabolites,
 )
@@ -46,13 +46,13 @@ __all__ = [
     "combine_neighborhood_pvalues",
     "create_adjacency_matrix",
     "create_gene_network",
-    "create_group_distance_adjacency_matrix",
-    "create_group_distance_network",
-    "create_group_neighborhood_network",
     "create_metabolic_network",
     "create_metabolite_network",
     "create_mutual_information_network",
     "create_reaction_network",
+    "create_target_set_distance_adjacency_matrix",
+    "create_target_set_distance_network",
+    "create_target_set_neighborhood_network",
     "find_dense_clusters",
     "find_variable_components",
     "fuzzy_reaction_intersection",
@@ -61,8 +61,8 @@ __all__ = [
     "gene_target_density",
     "gene_target_enrichment",
     "get_distance_matrix",
-    "get_network_group_clustering",
-    "get_network_group_linkage",
+    "get_network_target_set_clustering",
+    "get_network_target_set_linkage",
     "get_top_metabolite_pairs",
     "get_top_metabolites",
     "graph_gene_neighborhood_iter",

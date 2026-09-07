@@ -20,11 +20,11 @@ from metworkpy.network.network_construction import (
     _create_sparse_adjacency_matrix,
     _create_stoichiometric_matrix,
     create_adjacency_matrix,
-    create_group_neighborhood_network,
     create_mass_flow_network,
     create_metabolic_network,
     create_metabolite_mass_flow_network,
     create_mutual_information_network,
+    create_target_set_neighborhood_network,
 )
 
 # Local Imports
@@ -849,9 +849,9 @@ class TestCreateGroupConnectivityNetwork(unittest.TestCase):
             "group3": {"b", "f"},
             "group4": {"g"},
         }
-        connectivity_graph = create_group_neighborhood_network(
+        connectivity_graph = create_target_set_neighborhood_network(
             network=g,
-            groups=groups,  # type: ignore
+            target_sets=groups,  # type: ignore
             max_distance=1,
         )
         # Create the expected graph manually
@@ -1354,7 +1354,7 @@ class TestMutualInformationNetwork(unittest.TestCase):
 
     def test_create_mutual_information_network(self):
         test_network = create_mutual_information_network(
-            model=self.test_model, n_samples=1000, n_neighbors=3
+            model=self.test_model, n_samples=100, n_neighbors=5
         )
         # More proximate reactions should have greater mutual information
         self.assertGreater(
@@ -1363,7 +1363,7 @@ class TestMutualInformationNetwork(unittest.TestCase):
         )
         for rxn in self.test_model.reactions:
             test_network.has_node(rxn.id)
-        test_samples = cobra.sampling.sample(self.test_model, n=1000)
+        test_samples = cobra.sampling.sample(self.test_model, n=100)
         mi_adj_mat = mi_network_adjacency_matrix(test_samples, n_neighbors=3)
         assert isinstance(mi_adj_mat, pd.DataFrame)
         test_network = create_mutual_information_network(

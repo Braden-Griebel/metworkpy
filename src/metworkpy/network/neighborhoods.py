@@ -185,11 +185,11 @@ def get_graph_neighborhood(
     return neighborhood
 
 
-def get_group_graph_neighborhood(
+def get_target_set_graph_neighborhood(
     network: nx.Graph | nx.DiGraph, radius: int, nodes: set[Hashable]
 ) -> set[Hashable]:
     """
-    Get the neighborhood of a group of nodes, that is all nodes reachable
+    Get the neighborhood of a target set of nodes, that is all nodes reachable
     within a distance of `radius` from a node in `nodes`
 
     Parameters
@@ -199,7 +199,7 @@ def get_group_graph_neighborhood(
     radius : int
         The radius of the neighborhood
     node : set of Hashable
-        The group of nodes to find the neighborhood for
+        The target set of nodes to find the neighborhood for
 
     Returns
     -------

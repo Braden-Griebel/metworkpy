@@ -27,7 +27,7 @@ from metworkpy.information.mutual_information_network import (
     mi_pairwise,
 )
 from metworkpy.network.neighborhoods import (
-    get_group_graph_neighborhood,
+    get_target_set_graph_neighborhood,
 )
 from metworkpy.network.projection import bipartite_project
 from metworkpy.utils import reaction_to_gene_ids, reaction_to_gene_list
@@ -881,46 +881,46 @@ def create_gene_network(
     )
 
 
-######################
-### Group Networks ###
-######################
+###########################
+### Target Set Networks ###
+###########################
 
 
-def create_group_neighborhood_network(
+def create_target_set_neighborhood_network(
     network: nx.Graph | nx.DiGraph,
-    groups: dict[Hashable, Iterable[Hashable]],
+    target_sets: dict[Hashable, Iterable[Hashable]],
     max_distance: int = 1,
     weighted: Literal["count", "proportion", "enrichment"] | None = None,
     directed: bool = False,
 ) -> nx.Graph | nx.DiGraph:
     """
-    Create a group connectivity network, see notes for details
+    Create a target set connectivity network, see notes for details
 
     Parameters
     ----------
     network : nx.Graph or nx.DiGraph
         Network to use when finding neighbors. Edge weights
         will be ignored.
-    groups : dict of Hashable to Iterable of Hashable
-        Group definitions, must be a map between group names (which
+    target_sets : dict of Hashable to Iterable of Hashable
+        target set definitions, must be a map between target set names (which
         will be used as nodes in the network), and an iterable of
-        group members (which should be nodes in the network)
+        target set members (which should be nodes in the network)
     max_distance : int, default=1
         Max distance for nodes to be considered neighbors. A value of 0
-        will only connect groups with direct overlaps, while a value of 1
-        will connect groups which have members that are direct neighbors in the
+        will only connect target sets with direct overlaps, while a value of 1
+        will connect target sets which have members that are direct neighbors in the
         network.
     weighted : {'count', 'proportion', 'enrichment'}, optional
         Whether to weight the graph based on the number of connections
-        between the groups. If None (default) no weights are added. If
+        between the target sets. If None (default) no weights are added. If
         'count' then the edge weight is the count of connections between
-        the two groups. If 'proportion', the edge weight is normalized
+        the two target sets. If 'proportion', the edge weight is normalized
         by the maximum possible overlap. If enrichment, node attributes are
         added called pvalue, odds_ratio, and significance. The pvalue and
         odds ratio are the results of performing a Fisher's exact test on
-        the enrichment of one group in the neighborhood of the other (in the
+        the enrichment of one target set in the neighborhood of the other (in the
         undirected case, it is the minimum p-value/maximum odds_ratio found
-        when finding the enrichment of one group in the neighborhood of the
+        when finding the enrichment of one target set in the neighborhood of the
         other). The significance is the -log10 of the p-value. Note that the
         odds_ratio can be infinite.
     directed : bool, default=False
@@ -928,45 +928,45 @@ def create_group_neighborhood_network(
 
     Returns
     -------
-    group_neighborhood_network : nx.Graph or nx.DiGraph
-        The group connectivity graph, which includes nodes for every group
-        defined in `group`, with edges connecting groups which are connected
+    target set_neighborhood_network : nx.Graph or nx.DiGraph
+        The target set connectivity graph, which includes nodes for every target set
+        defined in `target set`, with edges connecting target sets which are connected
         in `network`, with optional edge weighted. Will be nx.Graph unless
         the input network is a DiGraph, and `directed` is True.
 
     Notes
     -----
-    The group connectivity graph is a graph with a node for each group
-    in `groups`, and edges connecting groups which include neighbors
-    on the `network`.
+    The target set connectivity graph is a graph with a node for each target set
+    in `target_sets`, and edges connecting target sets which include neighbors
+    in the `network`.
 
     For example, take a graph with:
 
         * Nodes: {a, b, c, d, e, f, g}
         * Edges: {(a, b), (c,d), (e,f), (a,g)}
 
-    then the group connectivity graph for groups
-    {group1: {a,c}, group2:{d,e}, group3:{b,f}, group4:{g}}
-    will produce the group connectivity graph (with parameter
+    then the target set connectivity graph for target sets
+    {target_set1: {a,c}, target_set2:{d,e}, target_set3:{b,f}, target_set4:{g}}
+    will produce the target set connectivity graph (with parameter
     max_distance set to 1):
 
-        * Nodes: {group1, group2, group3, group4}
-        * Edges: {(group1, group2), (group1, group3), (group1, group4), (group2, group3)}
+        * Nodes: {target_set1, target_set2, target_set3, target_set4}
+        * Edges: {(target_set1, target_set2), (target_set1, target_set3), (target_set1, target_set4), (target_set2, target_set3)}
 
     When counting the number of connections, it is determined
-    by finding the total neighborhood of one of the groups
+    by finding the total neighborhood of one of the target sets
     (that is the total node set within radius of a node
-    in that group), and counting the number of nodes from
-    the other group which are within that neighborhood.
+    in that target set), and counting the number of nodes from
+    the other target set which are within that neighborhood.
     """
     # Add the expected nodes
     connectivity_network = nx.Graph()
-    connectivity_network.add_nodes_from(groups.keys())
+    connectivity_network.add_nodes_from(target_sets.keys())
     # Convert the iterables into sets for easier comparison
-    group_sets = {k: set(v) for k, v in groups.items()}
+    group_sets = {k: set(v) for k, v in target_sets.items()}
     # Find the neighborhoods around the groups
     neighborhood_dict = {
-        g: get_group_graph_neighborhood(
+        g: get_target_set_graph_neighborhood(
             network=network, radius=max_distance, nodes=n
         )
         for g, n in group_sets.items()
@@ -1100,29 +1100,29 @@ def create_group_neighborhood_network(
     return connectivity_network
 
 
-def create_group_distance_network(
+def create_target_set_distance_network(
     network: nx.Graph | nx.DiGraph,
-    groups: dict[Hashable, Iterable[Hashable]],
+    target_sets: dict[Hashable, Iterable[Hashable]],
     weight: str | None = None,
     linkage: Literal["mean", "min", "max"] = "mean",
     directed: bool = False,
 ) -> nx.Graph | nx.DiGraph:
     """
-    Create an network for the distances between the `groups`
+    Create an network for the distances between the `target_sets`
 
     Parameters
     ----------
     network : nx.Graph or nx.DiGraph
         Network to use when finding distances between nodes
-        in the groups. Edge weights are ignored.
-    groups : dict of Hashable to Iterable of Hashable
-        Group definitions, must be a map between group names (which
+        in the target sets. Edge weights are ignored.
+    target sets : dict of Hashable to Iterable of Hashable
+        target set definitions, must be a map between target set names (which
         will be used as index/columns in the matrix), and an iterable of
-        group members (which should be nodes in the network)
+        target set members (which should be nodes in the network)
     weight : str, optional
         Edge attribute to use for weight, if None all edges have weight 1
     linkage : {'mean', 'min', 'max'}
-        Method to use when combining pairwise distances between groups
+        Method to use when combining pairwise distances between target sets
     directed : bool
         Whether the adjacency matrix should be directed or not, ignored
         unless the input network is a nx.DiGraph
@@ -1130,16 +1130,16 @@ def create_group_distance_network(
     Returns
     -------
     nx.Graph or nx.DiGraph
-        Network with a node for each group, and edges weighted by the distances
-        between the `groups` on the `network`.
+        Network with a node for each target set, and edges weighted by the distances
+        between the `target_sets` on the `network`.
 
     Notes
     -----
     Constructs the network using the pairwise distances between
-    groups. For each pair of groups, finds the distances between their
-    nodes and finds the distance between the two groups by aggregating
+    target sets. For each pair of target sets, finds the distances between their
+    nodes and finds the distance between the two target sets by aggregating
     these distances, either using the mean, minimum, or maximum of
-    the set of pairwise distances between two groups of nodes.
+    the set of pairwise distances between two target sets of nodes.
 
     """
     if directed:
@@ -1147,9 +1147,9 @@ def create_group_distance_network(
     else:
         group_obj = nx.Graph
     return nx.from_pandas_adjacency(
-        create_group_distance_adjacency_matrix(
+        create_target_set_distance_adjacency_matrix(
             network=network,
-            groups=groups,
+            target_sets=target_sets,
             weight=weight,
             linkage=linkage,
             directed=directed,
@@ -1158,29 +1158,29 @@ def create_group_distance_network(
     )
 
 
-def create_group_distance_adjacency_matrix(
+def create_target_set_distance_adjacency_matrix(
     network: nx.Graph | nx.DiGraph,
-    groups: dict[Hashable, Iterable[Hashable]],
+    target_sets: dict[Hashable, Iterable[Hashable]],
     weight: str | None = None,
     linkage: Literal["mean", "min", "max"] = "mean",
     directed: bool = False,
 ) -> pd.DataFrame:
     """
-    Create an adjacency matrix for the distances between the `groups`
+    Create an adjacency matrix for the distances between the `target_sets`
 
     Parameters
     ----------
     network : nx.Graph or nx.DiGraph
         Network to use when finding distances between nodes
-        in the groups. Edge weights are ignored.
-    groups : : dict of Hashable to Iterable of Hashable
-        Group definitions, must be a map between group names (which
+        in the target sets. Edge weights are ignored.
+    target_sets : : dict of Hashable to Iterable of Hashable
+        target set definitions, must be a map between target set names (which
         will be used as index/columns in the matrix), and an iterable of
-        group members (which should be nodes in the network)
+        target set members (which should be nodes in the network)
     weight : str, optional
         Edge attribute to use for weight, if None all edges have weight 1
     linkage : {'mean', 'min', 'max'}
-        Method to use when combining pairwise distances between groups
+        Method to use when combining pairwise distances between target sets
     directed : bool
         Whether the adjacency matrix should be directed or not, ignored
         unless the input network is a nx.DiGraph
@@ -1189,27 +1189,29 @@ def create_group_distance_adjacency_matrix(
     -------
     adjacency_matrix : pd.DataFrame
         DataFrame representing the adjacency matrix of the distances
-        between the `groups` on the `network`. Index and columns
-        are the keys of the `groups` dict, with values representing the
-        distances between the groups.
+        between the `target_sets` on the `network`. Index and columns
+        are the keys of the `target_sets` dict, with values representing the
+        distances between the target sets.
 
     Notes
     -----
     Constructs the adjacency matrix using the pairwise distances between
-    groups. For each pair of groups, finds the distances between their
-    nodes and finds the distance between the two groups by aggregating
+    target sets. For each pair of target sets, finds the distances between their
+    nodes and finds the distance between the two target sets by aggregating
     these distances, either using the mean, minimum, or maximum of
-    the set of pairwise distances between two groups of nodes.
+    the set of pairwise distances between two target sets of nodes.
     """
     # Compute the pairwise distances
     distance_dict = dict(nx.shortest_path_length(network, weight=weight))
     # Convert the groups into sets
-    group_sets = {s: set(m) for s, m in groups.items()}
+    group_sets = {s: set(m) for s, m in target_sets.items()}
     # Get the set of all nodes in the network
     network_node_set = set(network.nodes)
     # Create the adjacency matrix
     adj_mat = pd.DataFrame(
-        0.0, index=pd.Index(groups.keys()), columns=pd.Index(groups.keys())
+        0.0,
+        index=pd.Index(target_sets.keys()),
+        columns=pd.Index(target_sets.keys()),
     )
     # Fill in the adjacency matrix
     for g1, g2 in itertools.combinations(group_sets.keys(), 2):
@@ -1217,7 +1219,7 @@ def create_group_distance_adjacency_matrix(
         g2_nodes = group_sets[g2] & network_node_set
         if isinstance(network, nx.Graph):
             # Undirected case
-            adj_mat.loc[g1, g2] = _get_group_distance(
+            adj_mat.loc[g1, g2] = _get_target_set_distance(
                 distance_dict=distance_dict,
                 group1=g1_nodes,
                 group2=g2_nodes,
@@ -1226,13 +1228,13 @@ def create_group_distance_adjacency_matrix(
             adj_mat.loc[g2, g1] = adj_mat.loc[g1, g2]  # type: ignore
         if isinstance(network, nx.DiGraph):
             # Directed Case
-            d1 = _get_group_distance(
+            d1 = _get_target_set_distance(
                 distance_dict=distance_dict,
                 group1=g1_nodes,
                 group2=g2_nodes,
                 linkage=linkage,
             )
-            d2 = _get_group_distance(
+            d2 = _get_target_set_distance(
                 distance_dict=distance_dict,
                 group1=g2_nodes,
                 group2=g1_nodes,
@@ -2042,11 +2044,11 @@ def get_top_metabolite_pairs(
 def _enforce_threshold(
     data: pd.DataFrame | pd.Series, threshold: float
 ) -> pd.DataFrame | pd.Series:
-    data[(data >= -threshold) & (data <= threshold)] = 0.0
+    data[(data >= -threshold) & (data <= threshold)] = 0.0  # ty: ignore[invalid-assignment]
     return data
 
 
-def _get_group_distance(
+def _get_target_set_distance(
     distance_dict,
     group1: set[Hashable],
     group2: set[Hashable],
@@ -2121,16 +2123,17 @@ def _remove_currency_metabolites(
         not_indices[rhs_indices] = np.False_
         # Find the indices of the reactions where these currency metabolites
         # appear on both sides (with appropriate stoichiometry)
+        # NOTE: Non-subscriptable ignored as that is handled by the Scipy version check above
         remove_from_rxns_bool = (
             (
-                stoichiometric_matrix[lhs_indices].sum(axis=0) * n_rhs
-                + stoichiometric_matrix[rhs_indices].sum(axis=0) * n_lhs
+                stoichiometric_matrix[lhs_indices].sum(axis=0) * n_rhs  # ty: ignore[not-subscriptable]
+                + stoichiometric_matrix[rhs_indices].sum(axis=0) * n_lhs  # ty: ignore[not-subscriptable]
             )
             == 0.0
-        ) & (np.abs(stoichiometric_matrix[not_indices]).sum(axis=0) > 0)
+        ) & (np.abs(stoichiometric_matrix[not_indices]).sum(axis=0) > 0)  # ty: ignore[not-subscriptable]
         # Remove the reactions
         for idx in itertools.chain(lhs_indices, rhs_indices):
-            stoichiometric_matrix[idx, remove_from_rxns_bool] = 0.0
+            stoichiometric_matrix[idx, remove_from_rxns_bool] = 0.0  # ty: ignore[invalid-assignment]
     if not _check_scipy_version_greater(1, 17, 0):
         stoichiometric_matrix = stoichiometric_matrix.tocoo()
     stoichiometric_matrix.eliminate_zeros()
