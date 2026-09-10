@@ -56,6 +56,8 @@
   neighborhood size (neighborhoods smaller than this will result in NaN)
 - Added parameter to the `gene_neighborhood_density` to control the minimum
   neighborhood size (neighborhoods smaller than this will result in 0.0)
+- Added function for finding target node enrichment (`node_target_enrichment`),
+  finds the enrichment of target node set within neighborhoods of a network.
 
 ## Version 0.11.0
 
