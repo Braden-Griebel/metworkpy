@@ -199,6 +199,7 @@ class TestGeneTargetEnrichment(unittest.TestCase):
             alternative="greater",
             radius=0,
             processes=1,
+            min_neighborhood=0,
         )
         # Since there is only one targeted gene, with a radius of 0,
         # every reaction but r_A_B_D_E should have an enrichment of ~1
@@ -224,6 +225,7 @@ class TestGeneTargetEnrichment(unittest.TestCase):
             alternative="greater",
             radius=1,
             processes=1,
+            min_neighborhood=0,
         )
         R_A_imp_cont = np.array([[1, 1], [0, 8]])
         R_A_imp_pval = stats.fisher_exact(
@@ -270,6 +272,7 @@ class TestGeneTargetEnrichment(unittest.TestCase):
             alternative="greater",
             radius=1,
             processes=1,
+            min_neighborhood=0,
         )
         print(test_enrichment)
         self.assertAlmostEqual(

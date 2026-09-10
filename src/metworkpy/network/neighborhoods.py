@@ -609,9 +609,7 @@ def _create_filter_set(
     node_filter: Callable[[NodeType], bool] | set[NodeType] | None = None,
 ):
     if callable(node_filter):
-        filter_set = {
-            node for node in network if not node_filter(node)
-        }  # ty: ignore[call-top-callable]
+        filter_set = {node for node in network if not node_filter(node)}  # ty: ignore[call-top-callable]
     elif isinstance(node_filter, set):
         filter_set = set(network.nodes) - node_filter
     else:

@@ -132,6 +132,7 @@ def gene_target_density(
     node_filter: Callable[[NodeType], bool] | set[NodeType] | None = None,
     weight: str | None = None,
     include_node: bool = True,
+    min_neighborhood: int = 1,
     processes: int | None = None,
 ) -> dict[NodeType, float]:
     """
@@ -182,6 +183,10 @@ def gene_target_density(
         define a neighborhood. If None, all edges are treated as having a weight of 1.
     include_node : bool, default=True
         Whether to include the central node in a neighborhood
+    min_neighborhood : int, default=1
+        The minimum size of a gene neighborhood to calculate density for,
+        any neighborhoods smaller than this size will result in a density
+        of 0.0
     processes : int, optional
         Number of processes to use
 
@@ -199,7 +204,7 @@ def gene_target_density(
         gene_targets = gene_targets.to_dict()  # type: ignore
 
     def _get_density(gene_ids: set[NodeType]):
-        if len(gene_ids) == 0:
+        if len(gene_ids) < min_neighborhood:
             return 0.0
         return float(
             sum(cast(dict, gene_targets).get(g, 0.0) for g in gene_ids)
@@ -231,6 +236,7 @@ def gene_target_enrichment(
     node_filter: Callable[[NodeType], bool] | set[NodeType] | None = None,
     weight: str | None = None,
     include_node: bool = True,
+    min_neighborhood: int = 1,
     metric: Literal["odds-ratio", "p-value"] = "p-value",
     alternative: Literal["two-sided", "less", "greater"] = "greater",
     processes: int | None = None,
@@ -282,6 +288,10 @@ def gene_target_enrichment(
         define a neighborhood. If None, all edges are treated as having a weight of 1.
     include_node : bool, default=True
         Whether to include the central node in a neighborhood
+    min_neighborhood : int, default=1
+        The minimum size of a gene neighborhood to calculate enrichment for,
+        any neighborhoods smaller than this size will result in a p-value/odds-ratio
+        of NaN
     metric : "odds-ratio" or "p-value", default="p-value"
         The enrichment metric to return in the Series, either the odds-ratio
         or the p-value (default) of the Fisher's exact test used to
@@ -344,6 +354,16 @@ def gene_target_enrichment(
     total_gene_count = len(community_gene_set)
 
     def _get_enrichment(neighborhood_gene_ids: set[NodeType]):
+        if len(neighborhood_gene_ids) < min_neighborhood:
+            match metric:
+                case "p-value":
+                    return np.nan
+                case "odds-ratio":
+                    return np.nan
+                case m:
+                    raise ValueError(
+                        f"Excpected 'p-value' or 'statistic' for metric, received {m}"
+                    )
         fisher_res = stats.fisher_exact(
             [
                 [

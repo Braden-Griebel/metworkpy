@@ -52,6 +52,10 @@
 - Added parameters to the `corner_sampling` function to allow for adjusting the
   randomized objective (changing the number of randomly selected reactions,
   changing the minimum and maximum possible objective weights).
+- Added parameter to the `gene_target_enrichment` to control minimum
+  neighborhood size (neighborhoods smaller than this will result in NaN)
+- Added parameter to the `gene_neighborhood_density` to control the minimum
+  neighborhood size (neighborhoods smaller than this will result in 0.0)
 
 ## Version 0.11.0
 
